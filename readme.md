@@ -14,25 +14,25 @@ Installed skills are copied into the project so they can be used independently o
 
 Add the gem to your project:
 
-```bash
+``` bash
 $ bundle add agent-skills
 ```
 
 List available skills:
 
-```bash
+``` bash
 $ bundle exec bake agent:skills:list
 ```
 
 Install all available skills:
 
-```bash
+``` bash
 $ bundle exec bake agent:skills:install
 ```
 
 Install skills from a specific gem:
 
-```bash
+``` bash
 $ bundle exec bake agent:skills:install --gem sus
 ```
 
@@ -40,7 +40,7 @@ $ bundle exec bake agent:skills:install --gem sus
 
 Create a top-level `skills/` directory containing one directory per skill:
 
-```text
+``` text
 your-gem/
 ├── skills/
 │   └── ruby-testing/
@@ -54,7 +54,7 @@ your-gem/
 
 Each `SKILL.md` begins with YAML frontmatter:
 
-```markdown
+``` markdown
 ---
 name: ruby-testing
 description: Test Ruby projects using the project's configured test framework.
@@ -71,10 +71,10 @@ The declared `name` must match its containing directory. Ensure `skills/**/*` is
 
 The installer records gem-owned skills in `.agents/skills/.agent-skills.yaml`.
 
-- Existing project-authored skills are never overwritten.
-- Different gems cannot install the same skill name.
-- A gem can update or remove only skills previously recorded as belonging to that gem.
-- Invalid `SKILL.md` metadata stops installation with an error.
+  - Existing project-authored skills are never overwritten.
+  - Different gems cannot install the same skill name.
+  - A gem can update or remove only skills previously recorded as belonging to that gem.
+  - Invalid `SKILL.md` metadata stops installation with an error.
 
 Skills may include scripts and operational instructions. Review the skills supplied by dependencies before installing them.
 
@@ -82,7 +82,7 @@ The generated `.agents/` directory should be excluded from version control. Run 
 
 ## Commands
 
-```bash
+``` bash
 # List every gem which provides skills:
 bake agent:skills:list
 
