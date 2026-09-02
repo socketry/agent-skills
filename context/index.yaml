@@ -1,0 +1,10 @@
+---
+description: Install and manage agent skills from Ruby gems.
+metadata:
+  documentation_uri: https://socketry.github.io/agent-skills/
+  funding_uri: https://github.com/sponsors/ioquatix/
+  source_code_uri: https://github.com/socketry/agent-skills.git
+files:
+- path: getting-started.md
+  title: Getting Started with Agent Skills
+  description: Discover, inspect, and install agent skills provided by Ruby gems.
