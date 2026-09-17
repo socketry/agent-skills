@@ -105,7 +105,13 @@ This gem provides contextual documentation in `context/` for use with [`agent-co
 
 ## Releases
 
-There are no documented releases.
+Please see the [project releases](https://socketry.github.io/agent-skills/releases/index) for all releases.
+
+### v0.0.0
+
+  - Initial release.
+  - Discover and validate skills provided by Ruby gems.
+  - Install project-scoped skills with ownership and collision protection.
 
 ## Contributing
 

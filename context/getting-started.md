@@ -1,71 +1,54 @@
-# Getting Started with Agent Skills
+# Getting Started
 
-This guide explains how to discover, inspect, and install agent skills provided by Ruby gems.
+`agent-skills` discovers and installs reusable agent skills distributed by Ruby gems.
 
 ## Installation
 
-Add `agent-skills` to the consuming project:
-
 ```bash
 $ bundle add agent-skills
-```
-
-List the skills available from installed gems:
-
-```bash
 $ bundle exec bake agent:skills:list
-```
-
-Install them into the project:
-
-```bash
 $ bundle exec bake agent:skills:install
 ```
 
-## Source and Destination Directories
+## Providing Skills
 
-Provider gems publish skills beneath `skills/`:
-
-```text
-provider-gem/
-└── skills/
-    └── ruby-testing/
-        ├── SKILL.md
-        ├── references/
-        └── scripts/
-```
-
-The consuming project receives them beneath `.agents/skills/`:
+Provider gems place one or more skill packages beneath a top-level `skills/` directory:
 
 ```text
-consumer-project/
-└── .agents/
-    └── skills/
-        ├── ruby-testing/
-        └── .agent-skills.yaml
+your-gem/
+├── skills/
+│   └── ruby-testing/
+│       ├── SKILL.md
+│       ├── references/
+│       └── scripts/
+├── lib/
+└── your-gem.gemspec
 ```
 
-## Providing a Skill
+Each `SKILL.md` starts with YAML frontmatter containing a `name` and `description`. The name must match the directory.
 
-Create a directory beneath your gem's top-level `skills/` directory. Add a `SKILL.md` file with required frontmatter:
+## Installing Skills
 
-```markdown
----
-name: ruby-testing
-description: Test Ruby changes with the project's configured test framework.
----
+Install every discovered skill:
 
-# Ruby Testing
-
-Run the narrowest relevant test first, then run the complete suite.
+```bash
+$ bake agent:skills:install
 ```
 
-The `name` must match the containing directory. Include the complete `skills/**/*` tree in the gemspec.
+Install from a particular gem:
 
-## Installation Ownership
+```bash
+$ bake agent:skills:install --gem sus
+```
 
-`agent-skills` writes `.agents/skills/.agent-skills.yaml` to record which gem owns each installed skill. It will update skills owned by the same gem, but refuses to overwrite unmanaged skills or skills owned by another gem.
+Installed skills are copied to `.agents/skills/`. An ownership registry prevents dependencies from overwriting project-authored skills or skills supplied by another gem.
 
-## Safety
+## Inspecting Skills
 
-Skills may contain scripts and operational instructions. Inspect skills with `bake agent:skills:list` and `bake agent:skills:show` before installation when evaluating an unfamiliar dependency.
+```bash
+$ bake agent:skills:list
+$ bake agent:skills:list --gem sus
+$ bake agent:skills:show --gem sus --skill ruby-testing
+```
+
+Review unfamiliar skills before installing them, especially when they include scripts.
