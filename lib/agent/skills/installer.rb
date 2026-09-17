@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2025, by Shopify Inc.
-# Copyright, 2025-2026, by Samuel Williams.
+# Copyright, 2026, by Shopify Inc.
 
 require "fileutils"
 require "rubygems"
@@ -59,7 +58,7 @@ module Agent
 			#
 			# @parameter gem_name [String] The gem name to find.
 			def find_gem_with_skills(gem_name)
-				specification = @specifications.find {|candidate| candidate.name == gem_name}
+				specification = @specifications.find{|candidate| candidate.name == gem_name}
 				return unless specification
 				
 				build_gem_information(specification)
@@ -81,7 +80,7 @@ module Agent
 				skills = list_skills(gem_name)
 				return unless skills
 				
-				definition = skills.find {|skill| skill.name == skill_name}
+				definition = skills.find{|skill| skill.name == skill_name}
 				File.read(definition.skill_file) if definition
 			end
 			
@@ -180,13 +179,13 @@ module Agent
 			end
 			
 			def install_gems(gems)
-				definitions = gems.flat_map {|gem| gem[:skills]}
+				definitions = gems.flat_map{|gem| gem[:skills]}
 				return [] if definitions.empty?
 				
 				validate_unique_skills(definitions)
 				
 				registry = Registry.new(File.join(@skills_path, Registry::FILE_NAME))
-				definitions.each {|definition| validate_destination(definition, registry)}
+				definitions.each{|definition| validate_destination(definition, registry)}
 				
 				stale_skills = gems.flat_map do |gem|
 					current_names = gem[:skills].map(&:name)
@@ -196,17 +195,17 @@ module Agent
 				definitions.each do |definition|
 					registry.claim(definition.name, definition.provider_name, definition.provider_version)
 				end
-				stale_skills.each {|skill_name| registry.release(skill_name)}
+				stale_skills.each{|skill_name| registry.release(skill_name)}
 				registry.save
 				
-				definitions.each {|definition| copy_skill(definition)}
-				stale_skills.each {|skill_name| remove_skill(skill_name)}
+				definitions.each{|definition| copy_skill(definition)}
+				stale_skills.each{|skill_name| remove_skill(skill_name)}
 				
 				definitions.map(&:name)
 			end
 			
 			def validate_unique_skills(definitions)
-				duplicates = definitions.group_by(&:name).select {|_name, matches| matches.length > 1}
+				duplicates = definitions.group_by(&:name).select{|_name, matches| matches.length > 1}
 				return if duplicates.empty?
 				
 				details = duplicates.map do |name, matches|

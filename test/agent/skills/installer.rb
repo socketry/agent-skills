@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2025, by Shopify Inc.
-# Copyright, 2025-2026, by Samuel Williams.
+# Copyright, 2026, by Shopify Inc.
 
 require "agent/skills/installer"
 require "tmpdir"
@@ -87,7 +86,7 @@ describe Agent::Skills::Installer do
 		local_installer = subject.new(root: consumer_root, specifications: [local_specification])
 		
 		expect(local_installer.find_gems_with_skills).to be == []
-		expect(local_installer.find_gems_with_skills(skip_local: false).map {|gem| gem[:name]}).to be == ["local-gem"]
+		expect(local_installer.find_gems_with_skills(skip_local: false).map{|gem| gem[:name]}).to be == ["local-gem"]
 	end
 	
 	with "installation" do

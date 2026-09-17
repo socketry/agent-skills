@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2025, by Shopify Inc.
-# Copyright, 2025-2026, by Samuel Williams.
+# Copyright, 2026, by Shopify Inc.
 
 require_relative "../../lib/agent/skills/installer"
 
@@ -62,7 +61,7 @@ def install(gem: nil)
 		installed = @installer.install_gem_skills(gem)
 		if installed
 			puts "Installed #{installed.length} skills from gem '#{gem}':"
-			installed.each {|skill_name| puts "  #{skill_name}"}
+			installed.each{|skill_name| puts "  #{skill_name}"}
 		else
 			puts "No skills found for gem '#{gem}'"
 		end
@@ -70,7 +69,7 @@ def install(gem: nil)
 		installed = @installer.install_all_skills
 		if installed.any?
 			puts "Installed #{installed.length} skills:"
-			installed.each {|skill_name| puts "  #{skill_name}"}
+			installed.each{|skill_name| puts "  #{skill_name}"}
 		else
 			puts "No gems with skills found"
 		end
