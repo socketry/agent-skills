@@ -4,10 +4,10 @@
 # Copyright, 2025, by Shopify Inc.
 # Copyright, 2025-2026, by Samuel Williams.
 
-require_relative "skill/version"
-require_relative "skill/definition"
-require_relative "skill/registry"
-require_relative "skill/installer"
+require_relative "skills/version"
+require_relative "skills/definition"
+require_relative "skills/registry"
+require_relative "skills/installer"
 
 # @namespace
 module Agent
