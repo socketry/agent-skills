@@ -1,143 +1,23 @@
 # Agent Skills
 
-Provides tools for discovering and installing agent skills distributed by Ruby gems.
+Provides the Ruby discovery and installation layer used by `agent-context`.
 
-[![Development Status](https://github.com/socketry/agent-skills/workflows/Test/badge.svg)](https://github.com/socketry/agent-skills/actions?workflow=Test)
+Run package commands through `agent-context`:
 
-## Overview
-
-Ruby gems can provide reusable agent workflows in a top-level `skills/` directory. `agent-skills` discovers those packages and installs them into the consuming project's `.agents/skills/` directory.
-
-Installed skills are copied into the project so they can be used independently of the provider gem's installation path.
-
-## Quick Start
-
-Add the gem to your project:
-
-``` bash
-$ bundle add agent-skills
+```sh
+bake agent:context:install
+bake agent:context:skill:list
+bake agent:context:skill:install --gem provider --skill provider-workflow
+bake agent:context:skill:show --gem provider --skill provider-workflow
 ```
 
-List available skills:
+The `agent:skills:*` commands are removed.
 
-``` bash
-$ bundle exec bake agent:skills:list
-```
+Providers may publish `context/<name>.md` documents with `type: skill` and a non-empty `description`, plus resources under `context/<name>/`. Installed names are package-prefixed. Existing `skills/<name>/SKILL.md` bundles retain their declared names. Both formats use the 64-character name and 1,024-character description limits and preserve extra metadata.
 
-Install all available skills:
+The shared ownership index at `.agents/skills/.agent-context-skills.json` records ecosystem, package, and version. Ruby installation migrates legacy ownership, stages replacements, preserves project-owned and Cargo-owned skills, and reconciles empty or removed gem providers. Only generated paths are excluded through local Git rules.
 
-``` bash
-$ bundle exec bake agent:skills:install
-```
-
-Install skills from a specific gem:
-
-``` bash
-$ bundle exec bake agent:skills:install --gem sus
-```
-
-## Providing Skills in a Gem
-
-Create a top-level `skills/` directory containing one directory per skill:
-
-``` text
-your-gem/
-├── skills/
-│   └── ruby-testing/
-│       ├── SKILL.md
-│       ├── scripts/
-│       ├── references/
-│       └── assets/
-├── lib/
-└── your-gem.gemspec
-```
-
-Each `SKILL.md` begins with YAML frontmatter:
-
-``` markdown
----
-name: ruby-testing
-description: Test Ruby projects using the project's configured test framework.
----
-
-# Ruby Testing
-
-Read the project instructions and run the narrowest relevant tests first.
-```
-
-The declared `name` must match its containing directory. Ensure `skills/**/*` is included in the gem's packaged files.
-
-## Installation Safety
-
-The installer records gem-owned skills in `.agents/skills/.agent-skills.yaml`.
-
-  - Existing project-authored skills are never overwritten.
-  - Different gems cannot install the same skill name.
-  - A gem can update or remove only skills previously recorded as belonging to that gem.
-  - Invalid `SKILL.md` metadata stops installation with an error.
-
-Skills may include scripts and operational instructions. Review the skills supplied by dependencies before installing them.
-
-The generated `.agents/` directory should be excluded from version control. Run installation during project setup and in CI when skills are required.
-
-## Commands
-
-``` bash
-# List every gem which provides skills:
-bake agent:skills:list
-
-# List skills from one gem:
-bake agent:skills:list --gem sus
-
-# Show a skill's SKILL.md:
-bake agent:skills:show --gem sus --skill ruby-testing
-
-# Install all discovered skills:
-bake agent:skills:install
-
-# Install skills from one gem:
-bake agent:skills:install --gem sus
-```
-
-## Context
-
-This gem provides contextual documentation in `context/` for use with [`agent-context`](https://github.com/socketry/agent-context).
-
-## Releases
-
-Please see the [project releases](https://socketry.github.io/agent-skills/releases/index) for all releases.
-
-### v0.0.0
-
-  - Initial release.
-  - Discover and validate skills provided by Ruby gems.
-  - Install project-scoped skills with ownership and collision protection.
-
-## Contributing
-
-We welcome contributions to this project.
-
-1.  Fork the repository.
-2.  Create your feature branch (`git checkout -b my-new-feature`).
-3.  Commit your changes (`git commit -am 'Add some feature.'`).
-4.  Push to the branch (`git push origin my-new-feature`).
-5.  Create a new pull request.
-
-### Running Tests
-
-To run the test suite:
-
-``` bash
-$ bundle exec sus
-```
-
-### Making Releases
-
-To make a new release:
-
-``` bash
-$ bundle exec bake gem:release:patch # or minor or major
-```
+See [the packaging specification](specification.md) and [license.md](license.md).
 
 ### Developer Certificate of Origin
 

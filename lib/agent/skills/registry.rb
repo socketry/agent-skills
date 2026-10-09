@@ -2,116 +2,132 @@
 
 # Released under the MIT License.
 # Copyright, 2026, by Shopify Inc.
+# Copyright, 2026, by Samuel Williams.
 
 require "fileutils"
+require "json"
 require "yaml"
+require "tempfile"
 
 module Agent
 	module Skills
-		# Tracks which installed skills are owned by which gems.
+		# Represents the shared ownership index for dependency-installed skills.
 		class Registry
-			FILE_NAME = ".agent-skills.yaml"
-			FORMAT_VERSION = 1
+			FILE_NAME = ".agent-context-skills.json"
+			FORMAT_VERSION = 2
 			NAME_PATTERN = /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/
 			
-			# Raised when the registry cannot be safely interpreted.
+			# Raised when ownership cannot be safely interpreted.
 			class Invalid < StandardError
 			end
 			
-			# Initialize a registry stored at the given path.
-			#
-			# @parameter path [String] The registry file path.
+			# Load shared ownership and import legacy Ruby ownership.
+			# @parameter path [String] The shared ownership index.
 			def initialize(path)
 				@path = path
 				@data = load_data
+				import_legacy_ruby
 			end
 			
+			# @attribute [String] The path of the shared ownership index.
 			attr_reader :path
 			
-			# Get ownership metadata for a skill.
-			#
-			# @parameter skill_name [String] The installed skill name.
-			def owner(skill_name)
-				@data["skills"][skill_name]
+			# @attribute [Hash] The recorded skill owners.
+			def owners
+				@data["skills"]
 			end
 			
-			# Get all skills owned by a gem.
-			#
-			# @parameter gem_name [String] The provider gem name.
-			def skills_for(gem_name)
-				@data["skills"].select do |_skill_name, owner|
-					owner["gem"] == gem_name
+			# Find a skill's owner.
+			# @parameter name [String] The installed skill name.
+			# @returns [Hash | Nil] The recorded owner.
+			def owner(name)
+				owners[name]
+			end
+			
+			# Find skills owned by an ecosystem and optional package.
+			# @parameter package [String | Nil] The selected provider.
+			# @parameter ecosystem [String] The provider ecosystem.
+			# @returns [Hash] Matching skill owners.
+			def skills_for(package = nil, ecosystem: "gem")
+				owners.select do |_name, owner|
+					owner["ecosystem"] == ecosystem && (!package || owner["package"] == package)
 				end
 			end
 			
-			# Record ownership of an installed skill.
-			#
-			# @parameter skill_name [String] The installed skill name.
-			# @parameter gem_name [String] The provider gem name.
-			# @parameter gem_version [String] The provider gem version.
-			def claim(skill_name, gem_name, gem_version)
-				@data["skills"][skill_name] = {
-					"gem" => gem_name,
-					"version" => gem_version,
-				}
+			# Record dependency ownership.
+			# @parameter name [String] The installed skill name.
+			# @parameter package [String] The provider package.
+			# @parameter version [String] The provider version.
+			# @parameter ecosystem [String] The provider ecosystem.
+			def claim(name, package, version, ecosystem: "gem")
+				owners[name] = {"ecosystem" => ecosystem, "package" => package, "version" => version}
 			end
 			
-			# Remove ownership information for a skill.
-			#
-			# @parameter skill_name [String] The installed skill name.
-			def release(skill_name)
-				@data["skills"].delete(skill_name)
+			# Release skill ownership.
+			# @parameter name [String] The installed skill name.
+			def release(name)
+				owners.delete(name)
 			end
 			
-			# Persist the registry atomically.
+			# Persist shared ownership using an atomic rename.
 			def save
 				FileUtils.mkdir_p(File.dirname(@path))
-				
-				content = {
-					"version" => FORMAT_VERSION,
-					"skills" => @data["skills"].sort.to_h,
-				}.to_yaml
-				
-				temporary_path = "#{@path}.#{Process.pid}.tmp"
-				File.write(temporary_path, content)
-				File.rename(temporary_path, @path)
-			ensure
-				FileUtils.rm_f(temporary_path) if temporary_path
+				Tempfile.create([".agent-context-registry-", ".json"], File.dirname(@path)) do |file|
+					file.write(JSON.pretty_generate({"version" => FORMAT_VERSION, "skills" => owners.sort.to_h}) + "\n")
+					file.flush
+					File.rename(file.path, @path)
+				end
 			end
 			
 			private
 			
 			def load_data
-				return default_data unless File.exist?(@path)
-				
-				data = YAML.safe_load(File.read(@path), aliases: false)
-				validate_data(data)
+				return {"version" => FORMAT_VERSION, "skills" => {}} unless File.exist?(@path) || File.symlink?(@path)
+				raise Invalid, "Skill ownership index must be a regular file: #{@path}" unless File.lstat(@path).file?
+				data = JSON.parse(File.read(@path))
+				unless data.is_a?(Hash) && [1, FORMAT_VERSION].include?(data["version"]) && data["skills"].is_a?(Hash)
+					raise Invalid, "Invalid skill ownership index: #{@path}"
+				end
+				if data["version"] == 1
+					data["skills"].each_value{|owner| owner["ecosystem"] = "cargo" if owner.is_a?(Hash)}
+				end
+				data["version"] = FORMAT_VERSION
+				validate_owners(data["skills"])
 				data
-			rescue Psych::Exception => error
-				raise Invalid, "Could not load skill registry #{@path}: #{error.message}"
+			rescue JSON::ParserError => error
+				raise Invalid, "Invalid skill ownership index #{@path}: #{error.message}"
 			end
 			
-			def validate_data(data)
-				unless data.is_a?(Hash) && data["version"] == FORMAT_VERSION && data["skills"].is_a?(Hash)
-					raise Invalid, "Invalid skill registry format: #{@path}"
+			def import_legacy_ruby
+				legacy_path = File.join(File.dirname(@path), ".agent-skills.yaml")
+				return unless File.exist?(legacy_path) || File.symlink?(legacy_path)
+				raise Invalid, "Legacy skill registry must be a regular file: #{legacy_path}" unless File.lstat(legacy_path).file?
+				legacy = YAML.safe_load_file(legacy_path, aliases: false)
+				unless legacy.is_a?(Hash) && legacy["version"] == 1 && legacy["skills"].is_a?(Hash)
+					raise Invalid, "Invalid legacy skill registry: #{legacy_path}"
 				end
-				
-				data["skills"].each do |skill_name, owner|
-					unless skill_name.is_a?(String) && skill_name.match?(NAME_PATTERN)
-						raise Invalid, "Invalid skill name in registry: #{skill_name.inspect}"
-					end
-					
+				legacy["skills"].each do |name, owner|
 					unless owner.is_a?(Hash) && owner["gem"].is_a?(String) && owner["version"].is_a?(String)
-						raise Invalid, "Invalid owner for skill #{skill_name.inspect}"
+						raise Invalid, "Invalid legacy owner for #{name.inspect}"
 					end
+					converted = {"ecosystem" => "gem", "package" => owner["gem"], "version" => owner["version"]}
+					existing = owners[name]
+					if existing && existing.values_at("ecosystem", "package") != converted.values_at("ecosystem", "package")
+						raise Invalid, "Conflicting legacy ownership for #{name.inspect}"
+					end
+					owners[name] ||= converted
 				end
+				validate_owners(owners)
+			rescue Psych::Exception => error
+				raise Invalid, "Invalid legacy skill registry #{legacy_path}: #{error.message}"
 			end
 			
-			def default_data
-				{
-					"version" => FORMAT_VERSION,
-					"skills" => {},
-				}
+			def validate_owners(owners)
+				owners.each do |name, owner|
+					unless name.is_a?(String) && name.match?(NAME_PATTERN) && name.length <= 64 && owner.is_a?(Hash) && owner.values_at("ecosystem", "package", "version").all?{|value| value.is_a?(String) && !value.empty?}
+						raise Invalid, "Invalid owner for skill #{name.inspect}"
+					end
+				end
 			end
 		end
 	end

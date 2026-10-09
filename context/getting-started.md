@@ -1,54 +1,57 @@
 # Getting Started
 
-`agent-skills` discovers and installs reusable agent skills distributed by Ruby gems.
+This guide explains how to install package guidance and skills using `agent-context`.
 
 ## Installation
 
-```bash
-$ bundle add agent-skills
-$ bundle exec bake agent:skills:list
-$ bundle exec bake agent:skills:install
+```sh
+bundle add agent-context
+bundle exec bake agent:context:install
 ```
 
-## Providing Skills
+The installer copies guides to `.agents/context/<gem>/`, installs skills under `.agents/skills/`, and writes `.agents/context/index.md`. It preserves your repository-owned `agents.md`. Add a stable link to the generated index there and instruct agents to read relevant guides.
 
-Provider gems place one or more skill packages beneath a top-level `skills/` directory:
+## Commands
 
-```text
-your-gem/
-├── skills/
-│   └── ruby-testing/
-│       ├── SKILL.md
-│       ├── references/
-│       └── scripts/
-├── lib/
-└── your-gem.gemspec
+```sh
+bake agent:context:list
+bake agent:context:show --gem async --file getting-started
+bake agent:context:install --gem async
+bake agent:context:index
+bake agent:context:skill:list
+bake agent:context:skill:install --gem provider --skill provider-workflow
+bake agent:context:skill:show --gem provider --skill provider-workflow
 ```
 
-Each `SKILL.md` starts with YAML frontmatter containing a `name` and `description`. The name must match the directory.
+The main install command installs ordinary context and skills. The skill commands use installed, package-prefixed names for context-declared skills. The former `agent:skills:*` commands are removed.
 
-## Installing Skills
+## Provider Layout
 
-Install every discovered skill:
+Put ordinary guides in the packaged gem's top-level `context/` directory. Use a clear heading and first prose sentence. An optional YAML `description` overrides the summary. A provider-authored `index.yaml` can still control ordering, titles, and descriptions.
 
-```bash
-$ bake agent:skills:install
+To provide a skill, put a Markdown document directly inside `context/`:
+
+```markdown
+---
+type: skill
+description: Follow the workflow when setting up this package.
+---
+
+# Workflow
+
+Follow the setup instructions.
 ```
 
-Install from a particular gem:
+`context/workflow.md` in gem `provider` installs as `provider-workflow/SKILL.md`. The matching `context/workflow/` directory supplies resources. Additional skill metadata is preserved. Installed names must use lowercase ASCII letters, digits and single hyphens, with at most 64 characters. Descriptions must contain 1–1,024 characters. Existing `skills/<name>/SKILL.md` bundles retain their declared names.
 
-```bash
-$ bake agent:skills:install --gem sus
-```
+Include the complete source directories in your gem's packaged files. Skill documents and resource trees are installed only as skills.
 
-Installed skills are copied to `.agents/skills/`. An ownership registry prevents dependencies from overwriting project-authored skills or skills supplied by another gem.
+## Ownership and Version Control
 
-## Inspecting Skills
+Generated context and dependency-owned skills are reproducible. Edit their provider sources, then reinstall. Project-owned skills and instructions can live under `.agents/` and remain version controlled.
 
-```bash
-$ bake agent:skills:list
-$ bake agent:skills:list --gem sus
-$ bake agent:skills:show --gem sus --skill ruby-testing
-```
+Installation maintains local Git exclusions for generated context, ownership files, and exact dependency-installed skill directories. Remove blanket `/.agents/` ignore rules when adopting this layout.
 
-Review unfamiliar skills before installing them, especially when they include scripts.
+The shared ownership index records ecosystem, package, and version. Full Ruby refreshes remove stale gem-owned skills and preserve Cargo-owned skills. A selected-skill install leaves other skills intact. Failed skill copying or replacement preserves the previous files and index. Legacy ownership files migrate on successful installation.
+
+When migrating an old generated `agents.md`, replace its generated dependency listing with a stable link to `.agents/context/index.md`, preserving your project instructions.

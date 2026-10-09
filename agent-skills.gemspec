@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
 	spec.name = "agent-skills"
 	spec.version = Agent::Skills::VERSION
 	
-	spec.summary = "Install and manage agent skills from Ruby gems."
+	spec.summary = "Discover and install dependency skills for Agent Context."
 	spec.authors = ["Samuel Williams", "Shopify Inc."]
 	spec.license = "MIT"
 	

@@ -1,7 +1,7 @@
 # Automatically generated context index for Utopia::Project guides.
 # Do not edit then files in this directory directly, instead edit the guides and then run `bake utopia:project:agent:context:update`.
 ---
-description: Install and manage agent skills from Ruby gems.
+description: Discover and install dependency skills for Agent Context.
 metadata:
   bug_tracker_uri: https://github.com/socketry/agent-skills/issues
   changelog_uri: https://github.com/socketry/agent-skills/blob/main/releases.md
@@ -11,5 +11,5 @@ metadata:
 files:
 - path: getting-started.md
   title: Getting Started
-  description: "`agent-skills` discovers and installs reusable agent skills distributed
-    by Ruby gems."
+  description: This guide explains how to install package guidance and skills using
+    `agent-context`.
