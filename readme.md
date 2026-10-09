@@ -2,31 +2,14 @@
 
 `agent-skills` is deprecated. Skill discovery and installation are now part of [`agent-context`](https://github.com/socketry/agent-context), using the same context metadata format as [`bake-agent-context-rust`](https://github.com/socketry/bake-agent-context-rust).
 
-## Migration
+## Agent Context
 
-Replace `agent-skills` with `agent-context` in your Gemfile and run `bundle install`. Replace `agent:skills:*` commands with `agent:context:skill:*`:
+Add `agent-context` to your project and install dependency guidance and skills:
 
 ```sh
+bundle add agent-context
 bundle exec bake agent:context:install
-bundle exec bake agent:context:skill:list
-bundle exec bake agent:context:skill:show --gem provider --skill provider-workflow
-bundle exec bake agent:context:skill:install --gem provider --skill provider-workflow
 ```
-
-Providers should move `skills/<name>/SKILL.md` to `context/<name>.md`, add `type: skill` to its YAML front matter, and move companion resources to `context/<name>/`. Installed names become package-prefixed. Ensure `context/**/*` is included in the gem's packaged files.
-
-```markdown
----
-type: skill
-description: Run the provider's workflow when setting up the package.
----
-
-# Workflow
-
-Follow these instructions.
-```
-
-The `agent-context` installer imports ownership from `.agents/skills/.agent-skills.yaml` into `.agents/skills/.agent-context-skills.json` and removes obsolete gem-owned skills during refresh. Project-owned skills remain protected.
 
 See the [Agent Context documentation](https://github.com/socketry/agent-context/blob/main/guides/getting-started/readme.md), [portable specification](https://github.com/socketry/agent-context/blob/main/specification.md), and [license](license.md).
 
