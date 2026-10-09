@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
 	spec.name = "agent-skills"
 	spec.version = Agent::Skills::VERSION
 	
-	spec.summary = "Discover and install dependency skills for Agent Context."
+	spec.summary = "Deprecated: use agent-context to discover and install agent skills."
 	spec.authors = ["Samuel Williams", "Shopify Inc."]
 	spec.license = "MIT"
 	

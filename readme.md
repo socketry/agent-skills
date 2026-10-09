@@ -1,23 +1,34 @@
 # Agent Skills
 
-Provides the Ruby discovery and installation layer used by `agent-context`.
+`agent-skills` is deprecated. Skill discovery and installation are now part of [`agent-context`](https://github.com/socketry/agent-context), using the same context metadata format as [`bake-agent-context-rust`](https://github.com/socketry/bake-agent-context-rust).
 
-Run package commands through `agent-context`:
+## Migration
+
+Replace `agent-skills` with `agent-context` in your Gemfile and run `bundle install`. Replace `agent:skills:*` commands with `agent:context:skill:*`:
 
 ```sh
-bake agent:context:install
-bake agent:context:skill:list
-bake agent:context:skill:install --gem provider --skill provider-workflow
-bake agent:context:skill:show --gem provider --skill provider-workflow
+bundle exec bake agent:context:install
+bundle exec bake agent:context:skill:list
+bundle exec bake agent:context:skill:show --gem provider --skill provider-workflow
+bundle exec bake agent:context:skill:install --gem provider --skill provider-workflow
 ```
 
-The `agent:skills:*` commands are removed.
+Providers should move `skills/<name>/SKILL.md` to `context/<name>.md`, add `type: skill` to its YAML front matter, and move companion resources to `context/<name>/`. Installed names become package-prefixed. Ensure `context/**/*` is included in the gem's packaged files.
 
-Providers may publish `context/<name>.md` documents with `type: skill` and a non-empty `description`, plus resources under `context/<name>/`. Installed names are package-prefixed. Existing `skills/<name>/SKILL.md` bundles retain their declared names. Both formats use the 64-character name and 1,024-character description limits and preserve extra metadata.
+```markdown
+---
+type: skill
+description: Run the provider's workflow when setting up the package.
+---
 
-The shared ownership index at `.agents/skills/.agent-context-skills.json` records ecosystem, package, and version. Ruby installation migrates legacy ownership, stages replacements, preserves project-owned and Cargo-owned skills, and reconciles empty or removed gem providers. Only generated paths are excluded through local Git rules.
+# Workflow
 
-See [the packaging specification](specification.md) and [license.md](license.md).
+Follow these instructions.
+```
+
+The `agent-context` installer imports ownership from `.agents/skills/.agent-skills.yaml` into `.agents/skills/.agent-context-skills.json` and removes obsolete gem-owned skills during refresh. Project-owned skills remain protected.
+
+See the [Agent Context documentation](https://github.com/socketry/agent-context/blob/main/guides/getting-started/readme.md), [portable specification](https://github.com/socketry/agent-context/blob/main/specification.md), and [license](license.md).
 
 ### Developer Certificate of Origin
 
